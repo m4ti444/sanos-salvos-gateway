@@ -81,11 +81,19 @@ app = FastAPI(
 )
 
 # CORS Middleware
+ALLOWED_ORIGINS = [
+    "https://sanos-salvos-front.vercel.app",
+    "https://sanos-salvos-front-bw22yd9pd-matias-projects-a0c4e7cc.vercel.app",
+    "https://sanos-salvos-front-devhh1nms-matias-projects-a0c4e7cc.vercel.app",
+    "http://localhost:5173",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=r"https://sanos-salvos-front.*\.vercel\.app",
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
