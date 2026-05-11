@@ -15,8 +15,8 @@ pwd_context = CryptContext(schemes=["bcrypt", "pbkdf2_sha256"], deprecated="auto
 
 
 def hash_password(password: str) -> str:
-    """Hash a plain password using bcrypt."""
-    return pwd_context.hash(password)
+    """Hash a plain password using a Render-friendly scheme."""
+    return pwd_context.hash(password, scheme="pbkdf2_sha256")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
