@@ -6,8 +6,9 @@ Main entry point. Centralizes authentication, routing, and resilience.
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends, status, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import create_engine, text
 
@@ -96,6 +97,31 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def force_cors_headers(request: Request, call_next):
+    """Ensure Vercel frontend receives CORS headers, including preflight responses."""
+    origin = request.headers.get("origin")
+    allowed = origin in ALLOWED_ORIGINS or (
+        origin is not None
+        and origin.startswith("https://sanos-salvos-front")
+        and origin.endswith(".vercel.app")
+    )
+
+    if request.method == "OPTIONS" and allowed:
+        response = Response(status_code=204)
+    else:
+        response = await call_next(request)
+
+    if allowed:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        response.headers["Access-Control-Max-Age"] = "86400"
+        response.headers["Vary"] = "Origin"
+
+    return response
 
 
 # ============================================================
