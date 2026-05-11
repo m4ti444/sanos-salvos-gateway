@@ -1,0 +1,34 @@
+﻿services:
+  - type: web
+    name: sanos-salvos-gateway
+    runtime: docker
+    plan: free
+    branch: main
+    healthCheckPath: /health
+    envVars:
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 30
+      - key: JWT_REFRESH_TOKEN_EXPIRE_DAYS
+        value: 7
+      - key: POSTGRES_USER
+        sync: false
+      - key: POSTGRES_PASSWORD
+        sync: false
+      - key: POSTGRES_HOST
+        sync: false
+      - key: POSTGRES_PORT
+        value: 5432
+      - key: POSTGRES_DB
+        sync: false
+      - key: PETS_SERVICE_URL
+        sync: false
+      - key: GEO_SERVICE_URL
+        sync: false
+      - key: MATCH_SERVICE_URL
+        sync: false
+      - key: NOTIFICATIONS_SERVICE_URL
+        sync: false
