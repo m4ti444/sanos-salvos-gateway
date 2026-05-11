@@ -91,36 +91,25 @@ ALLOWED_ORIGINS = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
-    allow_origin_regex=r"https://sanos-salvos-front.*\.vercel\.app",
+    allow_origins=["*"],
     allow_credentials=False,
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
 @app.middleware("http")
 async def force_cors_headers(request: Request, call_next):
-    """Ensure Vercel frontend receives CORS headers, including preflight responses."""
-    origin = request.headers.get("origin")
-    allowed = origin in ALLOWED_ORIGINS or (
-        origin is not None
-        and origin.startswith("https://sanos-salvos-front")
-        and origin.endswith(".vercel.app")
-    )
-
-    if request.method == "OPTIONS" and allowed:
+    """Attach CORS headers to every response and answer all preflight requests."""
+    if request.method == "OPTIONS":
         response = Response(status_code=204)
     else:
         response = await call_next(request)
 
-    if allowed:
-        response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,PATCH,DELETE,OPTIONS"
-        response.headers["Access-Control-Allow-Headers"] = "*"
-        response.headers["Access-Control-Max-Age"] = "86400"
-        response.headers["Vary"] = "Origin"
-
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Max-Age"] = "86400"
     return response
 
 
