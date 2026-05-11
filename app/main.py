@@ -29,9 +29,41 @@ logger = logging.getLogger("gateway")
 # Database engine for auth
 engine = create_engine(settings.DATABASE_URL)
 
+def init_auth_schema():
+    """Create auth schema/table and demo user when running in a fresh database."""
+    demo_hash = "$2b$12$LJ3m4ys5qOzXHEOMgS/VZeRTk.yD1FMCmXEKi6hGXn2UZJdK0WlEy"
+    with engine.begin() as conn:
+        conn.execute(text("CREATE SCHEMA IF NOT EXISTS auth_service"))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS auth_service.users (
+                id SERIAL PRIMARY KEY,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                username VARCHAR(100) UNIQUE NOT NULL,
+                hashed_password VARCHAR(255) NOT NULL,
+                full_name VARCHAR(200),
+                phone VARCHAR(20),
+                is_active BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text("""
+            INSERT INTO auth_service.users (email, username, hashed_password, full_name, phone)
+            VALUES (:email, :username, :hashed_password, :full_name, :phone)
+            ON CONFLICT (email) DO NOTHING
+        """), {
+            "email": "demo@sanosysalvos.cl",
+            "username": "demo",
+            "hashed_password": demo_hash,
+            "full_name": "Usuario Demo",
+            "phone": "+56912345678",
+        })
+
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    init_auth_schema()
     logger.info("🚀 API Gateway starting...")
     logger.info(f"  → Pets Service:          {settings.PETS_SERVICE_URL}")
     logger.info(f"  → Geolocation Service:   {settings.GEO_SERVICE_URL}")
